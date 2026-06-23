@@ -1,4 +1,6 @@
 const adminTableBody = document.getElementById('adminTableBody');
+// ตั้งค่าตัวแปร URL สำหรับเรียกใช้ส่วนกลาง
+const API_URL = 'https://jaksi-school-api.onrender.com';
 
 // 1. ฟังก์ชันเช็กสิทธิ์รหัสผ่านแสนสวย (SweetAlert2)
 function checkPassword() {
@@ -37,9 +39,9 @@ function checkPassword() {
     });
 }
 
-// 2. ฟังก์ชันดึงข้อมูลจากหลังบ้านมาแสดงในตาราง
+// 2. ฟังก์ชันดึงข้อมูลจากหลังบ้านมาแสดงในตาราง (แก้ไขให้เป็นลิงก์ออนไลน์และเพิ่มปุ่มลบแล้ว)
 function fetchAppointments() {
-    fetch('http://localhost:3000/api/appointments')
+    fetch(`${API_URL}/api/appointments`)
         .then(response => response.json())
         .then(data => {
             if(adminTableBody) {
@@ -58,7 +60,10 @@ function fetchAppointments() {
                         <td>${item.approach}</td>
                         <td>${item.result}</td>
                         <td><span class="${statusClass}">${statusText}</span></td>
-                        <td><button class="btn-action" onclick="editAppointment(${item.id}, '${item.approach}', '${item.result}', '${item.status}')">บันทึกผล</button></td>
+                        <td>
+                            <button class="btn-action" onclick="editAppointment(${item.id}, '${item.approach}', '${item.result}', '${item.status}')">บันทึกผล</button>
+                            <button class="btn-delete" onclick="deleteAppointment(${item.id})" style="background-color: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin-left: 5px;">ลบ</button>
+                        </td>
                     `;
                     adminTableBody.appendChild(row);
                 });
@@ -104,7 +109,7 @@ function editAppointment(id, currentApproach, currentResult, currentStatus) {
     }).then((result) => {
         if (result.isConfirmed) {
             // ส่งข้อมูลที่คุณครูแก้ไขกลับไปยังหลังบ้านผ่านวิธี PUT Method
-            fetch(`https://jaksi-school-api.onrender.com`, {
+            fetch(`${API_URL}/api/appointments/${id}`, { // แก้ไขเพิ่มเติมเพื่อให้ส่ง id ไปด้วยตอนอัปเดต
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(result.value)
@@ -122,6 +127,41 @@ function editAppointment(id, currentApproach, currentResult, currentStatus) {
             .catch(error => {
                 console.error('Error:', error);
                 Swal.fire('เกิดข้อผิดพลาด', 'ไม่สามารถบันทึกข้อมูลได้', 'error');
+            });
+        }
+    });
+}
+
+// 4. ฟังก์ชันสำหรับลบคำร้องนัดหมายด้วย SweetAlert2
+function deleteAppointment(id) {
+    Swal.fire({
+        title: 'คุณครูแน่ใจไหม?',
+        text: "ต้องการลบคำร้องนัดหมายนี้ใช่หรือไม่? เมื่อลบแล้วข้อมูลจะหายไปทันที",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#718096',
+        confirmButtonText: 'ใช่, ต้องการลบ!',
+        cancelButtonText: 'ยกเลิก'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // ส่งคำสั่งลบไปยังหลังบ้านโดยอิงตาม ID
+            fetch(`${API_URL}/api/appointments/${id}`, {
+                method: 'DELETE'
+            })
+            .then(response => response.json())
+            .then(data => {
+                Swal.fire({
+                    title: 'ลบข้อมูลสำเร็จ!',
+                    text: 'คำร้องนัดหมายถูกลบเรียบร้อยแล้ว',
+                    icon: 'success',
+                    confirmButtonColor: '#28a745'
+                });
+                fetchAppointments(); // รีโหลดตารางใหม่เพื่ออัปเดตหน้าจอทันที
+            })
+            .catch(error => {
+                console.error('Error deleting data:', error);
+                Swal.fire('เกิดข้อผิดพลาด', 'ไม่สามารถลบข้อมูลจากหลังบ้านได้', 'error');
             });
         }
     });
