@@ -1,0 +1,194 @@
+/* นำเข้าฟอนต์ Google Font */
+@import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;700&display=swap');
+
+body {
+    font-family: 'Sarabun', sans-serif;
+    background-color: #f3f7f4; /* สีพื้นหลังอมเทา-เขียวอ่อนๆ ให้ความรู้สึกสบายตา */
+    margin: 0;
+    padding: 30px 20px;
+    color: #2d3748;
+}
+
+/* กล่องครอบดีไซน์ให้เหมือนกันทั้งสองหน้า */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    background: #ffffff;
+    padding: 40px;
+    border-radius: 16px; /* ขอบมนละมุนตาเหมือนกัน */
+    box-shadow: 0 4px 25px rgba(0, 0, 0, 0.04); /* เงาจางๆ สไตล์โมเดิร์น */
+}
+
+/* ปรับปรุงโครงสร้างของ หน้าหลังบ้าน (admin.html) ให้เข้าเซ็ตเพิ่ม */
+.container[style*="max-width: 1400px;"], 
+.container {
+    max-width: 1350px !important; /* จัดความกว้างให้พอดีกับหน้าจอ */
+}
+
+/* หัวข้อใหญ่ประจำหน้า */
+h1 {
+    font-size: 1.8rem;
+    color: #1e4620; /* สีเขียวเข้มสุภาพ */
+    margin-bottom: 25px;
+    font-weight: 700;
+}
+
+h2 {
+    font-size: 1.2rem;
+    color: #4a5568;
+    margin-bottom: 20px;
+}
+
+/* --- ส่วนของฟอร์ม (index.html) --- */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #2d3748;
+}
+
+.form-group input, 
+.form-group textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #cbd5e0;
+    border-radius: 8px;
+    font-family: 'Sarabun', sans-serif;
+    font-size: 0.95rem;
+    box-sizing: border-box;
+    transition: all 0.2s;
+    background-color: #fafdfb;
+}
+
+.form-group input:focus, 
+.form-group textarea:focus {
+    outline: none;
+    border-color: #28a745;
+    box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.15);
+}
+
+/* ปุ่มหลัก (สีเขียว Jaksi School) */
+.btn-submit {
+    width: 100%;
+    background-color: #28a745; /* สีเขียวเดียวกับในรูปภาพของคุณ */
+    color: white;
+    border: none;
+    padding: 14px;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: 'Sarabun', sans-serif;
+    transition: background 0.2s;
+}
+
+.btn-submit:hover {
+    background-color: #218838;
+}
+
+/* --- ส่วนของตาราง (admin.html) --- */
+.booking-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 25px;
+    background-color: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 0 0 1px #e2e8f0;
+}
+
+/* หัวตารางคุมโทนเขียวเข้มใบไม้ดูพรีเมียม */
+.booking-table th {
+    background-color: #2c5e3b; 
+    color: #ffffff;
+    font-weight: 600;
+    padding: 16px;
+    font-size: 0.95rem;
+    text-align: center;
+    border: 1px solid #234b2f;
+    white-space: nowrap;
+}
+
+/* ช่องตาราง */
+.booking-table td {
+    padding: 16px;
+    font-size: 0.9rem;
+    color: #4a5568;
+    border: 1px solid #edf2f7;
+    vertical-align: top;
+    line-height: 1.6;
+}
+
+/* ไฮไลท์แถวเว้นแถว */
+.booking-table tbody tr:nth-child(even) {
+    background-color: #f7faf8;
+}
+
+/* จัดสัดส่วนตาราง */
+.booking-table td:nth-child(1) { text-align: center; width: 60px; font-weight: bold; color: #718096; }
+.booking-table td:nth-child(2) { text-align: center; width: 110px; }
+.booking-table td:nth-child(3) { width: 160px; font-weight: 500; }
+.booking-table td:nth-child(7) { text-align: center; width: 130px; }
+.booking-table td:nth-child(8) { text-align: center; width: 110px; }
+
+/* ป้ายสถานะ */
+.status {
+    display: inline-block;
+    padding: 5px 14px;
+    border-radius: 50px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-align: center;
+}
+
+.status.success {
+    background-color: #e6fffa;
+    color: #047481;
+    border: 1px solid #b2f5ea;
+}
+
+.status.pending {
+    background-color: #fffaf0;
+    color: #dd6b20;
+    border: 1px solid #feebc8;
+}
+
+/* ปุ่มบันทึกผลและปุ่มลิงก์ข้ามหน้า */
+.btn-action {
+    background-color: #3182ce; /* สีน้ำเงินสำหรับปุ่มแอกชัน */
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: 'Sarabun', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: background 0.2s;
+}
+
+.btn-action:hover {
+    background-color: #2b6cb0;
+}
+
+a.btn-action {
+    display: inline-block;
+    text-decoration: none;
+    background-color: #4a5568; /* สีเทาเข้มคลาสสิกสำหรับปุ่มเปลี่ยนหน้า */
+}
+a.btn-action:hover {
+    background-color: #2d3748;
+}
+
+/* ลิงก์คุณครูด้านล่างหน้าจอเด็ก */
+.container p a {
+    transition: color 0.2s;
+}
+.container p a:hover {
+    color: #28a745 !important;
+    text-decoration: underline !important;
+}

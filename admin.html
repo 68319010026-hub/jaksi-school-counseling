@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบหลังบ้านสำหรับคุณครู</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container" style="max-width: 1400px;"> <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+            <h1>ระบบหลังบ้าน: ตารางรายชื่อการนัดหมายทั้งหมด</h1>
+            <a href="index.html" class="btn-action" style="background-color: #6c757d; text-decoration: none;">ไปหน้าส่งคำร้อง</a>
+        </div>
+        
+        <table class="booking-table">
+            <thead>
+                <tr>
+                    <th>ลำดับที่</th>
+                    <th>วัน/เดือน/ปี</th>
+                    <th>ชื่อ-สกุล นักเรียน</th>
+                    <th>ลักษณะปัญหาที่มาขอรับคำปรึกษา</th>
+                    <th>แนวทางการให้คำปรึกษา</th>
+                    <th>ผลการให้คำปรึกษา</th>
+                    <th>สถานะ</th>
+                    <th>จัดการ</th>
+                </tr>
+            </thead>
+            <tbody id="adminTableBody">
+                <tr>
+                    <td>1</td>
+                    <td>20 พ.ย. 67</td>
+                    <td>พรพิมล ดีใจ</td>
+                    <td>ไม่อยากมาโรงเรียน เบื่อโรงเรียน อยากเล่นเกมอยู่บ้าน</td>
+                    <td>ให้นักเรียนทำสิ่งที่นักเรียนสนใจ เช่น การเล่นกีฬา หรือวิชาคอมฯ</td>
+                    <td>นักเรียนมาโรงเรียนทุกวัน</td>
+                    <td><span class="status success">เสร็จสิ้น</span></td>
+                    <td><button class="btn-action">บันทึกผล</button></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="admin.js"></script>
+    </body>
+    <script src="admin.js"></script>
+</body>
+</html>

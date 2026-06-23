@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jaksi School - ระบบส่งคำร้องขอเข้ารับการปรึกษา</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>ระบบส่งคำร้องขอเข้ารับการปรึกษา</h1>
+        
+        <div class="form-section">
+            <h2>กรอกข้อมูลเพื่อนัดหมายเวลากับคุณครู</h2>
+            <form id="bookingForm">
+                <div class="form-group">
+                    <label for="studentName">ชื่อ-สกุล นักเรียน:</label>
+                    <input type="text" id="studentName" required placeholder="เช่น พรพิมล ดีใจ">
+                </div>
+                
+                <div class="form-group">
+                    <label for="appointmentDate">วัน/เดือน/ปี ที่ต้องการนัดหมาย:</label>
+                    <input type="text" id="appointmentDate" required placeholder="เช่น 20 พ.ย. 67">
+                </div>
+                
+                <div class="form-group">
+                    <label for="problemDetail">ลักษณะปัญหาที่มาขอรับคำปรึกษา:</label>
+                    <textarea id="problemDetail" required rows="5" placeholder="ระบุรายละเอียดปัญหาของคุณ..."></textarea>
+                </div>
+                
+                <button type="submit" class="btn-submit">ส่งคำร้องขอเข้ารับการปรึกษา</button>
+            </form>
+        </div>
+        
+        <p style="text-align: center; margin-top: 20px;">
+            <a href="admin.html" style="color: #6c757d; text-decoration: none; font-size: 0.9rem;">สำหรับผู้ดูแลระบบ (คุณครู)</a>
+        </p>
+    </div>
+    <!-- ดึงระบบกล่องแจ้งเตือนสำเร็จรูปมาใช้ -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="student.js"></script>
+</body>
+</html>
