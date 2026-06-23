@@ -1,13 +1,13 @@
 const express = require('express');
 const cors = require('cors');
 const app = express();
-// เปลี่ยนจาก const PORT = 3000; เป็นคำสั่งด้านล่างนี้
 const PORT = process.env.PORT || 3000;
 
+// อนุญาตให้หน้าบ้าน (Netlify / Localhost) ส่งข้อมูลเข้ามาได้
 app.use(cors());
 app.use(express.json());
 
-// ฐานข้อมูลจำลองในหน่วยความจำ (อิงข้อมูลเริ่มต้นจากภาพกระดาษของคุณ)
+// ข้อมูลจำลองในระบบ
 let appointments = [
     {
         id: 1,
@@ -20,59 +20,45 @@ let appointments = [
     }
 ];
 
-// API สำหรับดึงข้อมูลนัดหมายไปแสดงที่หน้าครู (admin.html)
+// 1. ดึงข้อมูลทั้งหมด (GET)
 app.get('/api/appointments', (req, res) => {
     res.json(appointments);
 });
 
-// API สำหรับรับคำร้องใหม่จากหน้าเด็ก (index.html)
+// 2. บันทึกข้อมูลใหม่จากนักเรียน (POST)
 app.post('/api/appointments', (req, res) => {
-    const { name, date, problem } = req.body;
-    
     const newAppointment = {
-        id: appointments.length + 1,
-        date: date,
-        name: name,
-        problem: problem,
-        approach: "-",
-        result: "-",
-        status: "pending"
+        id: appointments.length > 0 ? Math.max(...appointments.map(a => a.id)) + 1 : 1,
+        ...req.body
     };
-    
     appointments.push(newAppointment);
-    res.status(201).json({ message: "บันทึกคำร้องสำเร็จ!", data: newAppointment });
+    res.status(201).json(newAppointment);
 });
-    // API สำหรับให้คุณครูอัปเดตข้อมูลและเปลี่ยนสถานะคำร้อง
+
+// 3. แก้ไขอัปเดตข้อมูล (PUT)
 app.put('/api/appointments/:id', (req, res) => {
     const id = parseInt(req.params.id);
-    const { approach, result, status } = req.body;
-    
-    // ค้นหาข้อมูลนัดหมายที่ตรงกับ ID ที่ส่งมา
-    const appointment = appointments.find(item => item.id === id);
-    
-    if (appointment) {
-        // อัปเดตข้อมูลใหม่ที่คุณครูกรอกเข้ามา
-        appointment.approach = approach || appointment.approach;
-        appointment.result = result || appointment.result;
-        appointment.status = status || appointment.status;
-        
-        res.json({ message: "อัปเดตข้อมูลสำเร็จ!", data: appointment });
-    } else {
-        res.status(404).json({ message: "ไม่พบข้อมูลนัดหมายที่ระบุ" });
-    }
-});
-// เพิ่มคำสั่งสำหรับลบข้อมูลคำร้องนัดหมาย (Delete)
-app.delete('/api/bookings/:id', (req, res) => {
-    const id = parseInt(req.params.id);
-    const index = bookings.findIndex(b => b.id === id);
-    
+    const index = appointments.findIndex(a => a.id === id);
     if (index !== -1) {
-        bookings.splice(index, 1); // ลบข้อมูลในอาร์เรย์
-        res.json({ success: true, message: 'ลบข้อมูลสำเร็จ' });
+        appointments[index] = { ...appointments[index], ...req.body };
+        res.json(appointments[index]);
     } else {
-        res.status(404).json({ success: false, message: 'ไม่พบข้อมูลที่ต้องการลบ' });
+        res.status(404).json({ message: "ไม่พบข้อมูล" });
     }
 });
+
+// 4. ลบข้อมูลคำร้อง (DELETE)
+app.delete('/api/appointments/:id', (req, res) => {
+    const id = parseInt(req.params.id);
+    const index = appointments.findIndex(a => a.id === id);
+    if (index !== -1) {
+        appointments.splice(index, 1);
+        res.json({ success: true, message: "ลบข้อมูลสำเร็จ" });
+    } else {
+        res.status(404).json({ success: false, message: "ไม่พบข้อมูลที่ต้องการลบ" });
+    }
+});
+
 app.listen(PORT, () => {
-    console.log(`เซิร์ฟเวอร์หลังบ้านรันแล้วที่: http://localhost:${PORT}`);
+    console.log(`Server is running on port ${PORT}`);
 });
