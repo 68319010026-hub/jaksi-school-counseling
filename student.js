@@ -7,7 +7,7 @@ bookingForm.addEventListener('submit', function(event) {
     const date = document.getElementById('appointmentDate').value;
     const problem = document.getElementById('problemDetail').value;
 
-    fetch('https://jaksi-school-api.onrender.com', {
+    fetch('http://localhost:3000/api/appointments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, date, problem })
