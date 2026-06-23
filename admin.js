@@ -39,7 +39,7 @@ function checkPassword() {
     });
 }
 
-// 2. ฟังก์ชันดึงข้อมูลจากหลังบ้านมาแสดงในตาราง (แก้ไขให้เป็นลิงก์ออนไลน์และเพิ่มปุ่มลบแล้ว)
+// 2. ฟังก์ชันดึงข้อมูลจากหลังบ้านมาแสดงในตาราง
 function fetchAppointments() {
     fetch(`${API_URL}/api/appointments`)
         .then(response => response.json())
@@ -108,8 +108,7 @@ function editAppointment(id, currentApproach, currentResult, currentStatus) {
         }
     }).then((result) => {
         if (result.isConfirmed) {
-            // ส่งข้อมูลที่คุณครูแก้ไขกลับไปยังหลังบ้านผ่านวิธี PUT Method
-            fetch(`${API_URL}/api/appointments/${id}`, { // แก้ไขเพิ่มเติมเพื่อให้ส่ง id ไปด้วยตอนอัปเดต
+            fetch(`${API_URL}/api/appointments/${id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(result.value)
@@ -122,7 +121,7 @@ function editAppointment(id, currentApproach, currentResult, currentStatus) {
                     icon: 'success',
                     confirmButtonColor: '#28a745'
                 });
-                fetchAppointments(); // โหลดตารางใหม่เพื่อแสดงข้อมูลที่อัปเดตทันที
+                fetchAppointments(); 
             })
             .catch(error => {
                 console.error('Error:', error);
@@ -149,7 +148,12 @@ function deleteAppointment(id) {
             fetch(`${API_URL}/api/appointments/${id}`, {
                 method: 'DELETE'
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('ไม่สามารถลบข้อมูลบนเซิร์ฟเวอร์ได้');
+                }
+                return true; // ลบสำเร็จผ่านฉลุย ไม่ต้องแกะ JSON ให้เอ๋อ
+            })
             .then(data => {
                 Swal.fire({
                     title: 'ลบข้อมูลสำเร็จ!',

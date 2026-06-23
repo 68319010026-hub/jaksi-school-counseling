@@ -75,14 +75,16 @@ app.put('/api/appointments/:id', (req, res) => {
     }
 });
 
-// 4. ลบข้อมูลคำร้อง (DELETE)
+// 4. ลบข้อมูลคำร้อง (DELETE) - เวอร์ชันแก้ไขให้ลบได้จริง 100%
 app.delete('/api/appointments/:id', (req, res) => {
-    const id = parseInt(req.params.id);
-    const index = appointments.findIndex(a => a.id === id);
+    const id = req.params.id; // ดึง id ออกมาตรง ๆ โดยไม่บังคับแปลงเป็นตัวเลข
+    
+    // ค้นหาตำแหน่งโดยเช็กทั้งแบบตัวเลขและแบบข้อความพิมพ์เหมือนกัน
+    const index = appointments.findIndex(a => String(a.id) === String(id));
     
     if (index !== -1) {
-        appointments.splice(index, 1);
-        res.json({ success: true, message: "ลบข้อมูลสำเร็จ" });
+        appointments.splice(index, 1); // ลบข้อมูลชิ้นนั้นออกจาก Array
+        res.status(204).send(); // ส่งสถานะลบสำเร็จกลับไป (No Content)
     } else {
         res.status(404).json({ success: false, message: "ไม่พบข้อมูลที่ต้องการลบ" });
     }
