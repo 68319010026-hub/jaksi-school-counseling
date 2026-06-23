@@ -61,6 +61,18 @@ app.put('/api/appointments/:id', (req, res) => {
         res.status(404).json({ message: "ไม่พบข้อมูลนัดหมายที่ระบุ" });
     }
 });
+// เพิ่มคำสั่งสำหรับลบข้อมูลคำร้องนัดหมาย (Delete)
+app.delete('/api/bookings/:id', (req, res) => {
+    const id = parseInt(req.params.id);
+    const index = bookings.findIndex(b => b.id === id);
+    
+    if (index !== -1) {
+        bookings.splice(index, 1); // ลบข้อมูลในอาร์เรย์
+        res.json({ success: true, message: 'ลบข้อมูลสำเร็จ' });
+    } else {
+        res.status(404).json({ success: false, message: 'ไม่พบข้อมูลที่ต้องการลบ' });
+    }
+});
 app.listen(PORT, () => {
     console.log(`เซิร์ฟเวอร์หลังบ้านรันแล้วที่: http://localhost:${PORT}`);
 });
