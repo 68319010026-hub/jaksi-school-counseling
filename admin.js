@@ -104,7 +104,7 @@ function editAppointment(id, currentApproach, currentResult, currentStatus) {
     }).then((result) => {
         if (result.isConfirmed) {
             // ส่งข้อมูลที่คุณครูแก้ไขกลับไปยังหลังบ้านผ่านวิธี PUT Method
-            fetch(`http://localhost:3000/api/appointments/${id}`, {
+            fetch(`https://jaksi-school-api.onrender.com`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(result.value)
