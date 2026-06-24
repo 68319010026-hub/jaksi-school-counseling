@@ -39,7 +39,7 @@ function checkPassword() {
     });
 }
 
-// 2. ฟังก์ชันดึงข้อมูลจากหลังบ้านมาแสดงในตาราง
+// 2. ฟังก์ชันดึงข้อมูลจากหลังบ้านมาแสดงในตาราง (เวอร์ชันอัปเดตรองรับป้าย "ติดตามผล")
 function fetchAppointments() {
     fetch(`${API_URL}/api/appointments`)
         .then(response => response.json())
@@ -49,8 +49,21 @@ function fetchAppointments() {
                 
                 data.forEach(item => {
                     const row = document.createElement('tr');
-                    const statusClass = item.status === 'success' ? 'status success' : 'status pending';
-                    const statusText = item.status === 'success' ? 'เสร็จสิ้น' : 'รอรับคำปรึกษา';
+                    
+                    // ส่วนแก้ไข: แยกสีและตัวหนังสือสำหรับ 3 สถานะอย่างชัดเจน
+                    let statusClass = 'status pending';
+                    let statusText = 'รอรับคำปรึกษา';
+                    let customStyle = ''; // เอาไว้ใส่สีฟ้าพิเศษให้ป้ายติดตามผล
+
+                    if (item.status === 'success') {
+                        statusClass = 'status success';
+                        statusText = 'เสร็จสิ้น';
+                    } else if (item.status === 'follow-up') {
+                        statusClass = 'status follow-up';
+                        statusText = 'ติดตามผล';
+                        // กำหนดสีฟ้าพาสเทลสำหรับสถานะติดตามผล
+                        customStyle = 'style="background-color: #cce5ff; color: #004085; border: 1px solid #b8daff;"';
+                    }
 
                     row.innerHTML = `
                         <td>${item.id}</td>
@@ -59,7 +72,7 @@ function fetchAppointments() {
                         <td>${item.problem}</td>
                         <td>${item.approach}</td>
                         <td>${item.result}</td>
-                        <td><span class="${statusClass}">${statusText}</span></td>
+                        <td><span class="${statusClass}" ${customStyle}>${statusText}</span></td>
                         <td>
                             <button class="btn-action" onclick="editAppointment(${item.id}, '${item.approach}', '${item.result}', '${item.status}')">บันทึกผล</button>
                             <button class="btn-delete" onclick="deleteAppointment(${item.id})" style="background-color: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin-left: 5px;">ลบ</button>
@@ -87,10 +100,10 @@ function editAppointment(id, currentApproach, currentResult, currentStatus) {
             </div>
             <div style="text-align: left; margin-bottom: 10px;">
                 <label style="font-weight: 500;">สถานะคำร้อง:</label>
-                <select id="swal-status" class="swal2-input" style="margin: 5px 0 5px 0; width: 95%;">
+                <select id="swal-status" class="swal2-input" style="margin: 5px 0 15px 0; width: 95%;">
                     <option value="pending" ${currentStatus === 'pending' ? 'selected' : ''}>รอรับคำปรึกษา</option>
                     <option value="success" ${currentStatus === 'success' ? 'selected' : ''}>เสร็จสิ้น</option>
-                    <option value="success" ${currentStatus === 'follow-up' ? 'selected' : ''}>ติดตามผล</option>
+                    <option value="follow-up" ${currentStatus === 'follow-up' ? 'selected' : ''}>ติดตามผล</option>
                 </select>
             </div>
         `,
@@ -145,7 +158,6 @@ function deleteAppointment(id) {
         cancelButtonText: 'ยกเลิก'
     }).then((result) => {
         if (result.isConfirmed) {
-            // ส่งคำสั่งลบไปยังหลังบ้านโดยอิงตาม ID
             fetch(`${API_URL}/api/appointments/${id}`, {
                 method: 'DELETE'
             })
@@ -153,7 +165,7 @@ function deleteAppointment(id) {
                 if (!response.ok) {
                     throw new Error('ไม่สามารถลบข้อมูลบนเซิร์ฟเวอร์ได้');
                 }
-                return true; // ลบสำเร็จผ่านฉลุย ไม่ต้องแกะ JSON ให้เอ๋อ
+                return true; 
             })
             .then(data => {
                 Swal.fire({
@@ -162,7 +174,7 @@ function deleteAppointment(id) {
                     icon: 'success',
                     confirmButtonColor: '#28a745'
                 });
-                fetchAppointments(); // รีโหลดตารางใหม่เพื่ออัปเดตหน้าจอทันที
+                fetchAppointments(); 
             })
             .catch(error => {
                 console.error('Error deleting data:', error);
