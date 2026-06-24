@@ -30,24 +30,24 @@ app.get('/api/appointments', (req, res) => {
     res.json(appointments);
 });
 
-// 2. บันทึกข้อมูลใหม่จากนักเรียน (POST)
+// 2. ปรับปรุงส่วนบันทึกข้อมูลใหม่ (POST) ใน server.js เพื่อตั้งค่าเริ่มต้นให้ตัวแปรส่งต่อ
 app.post('/api/appointments', (req, res) => {
     try {
         const { date, name, problem } = req.body;
-        
-        // ตรวจสอบว่ามีข้อมูลส่งมาครบถ้วนไหม ป้องกันข้อผิดพลาดแบบขึ้นกล่องแดง
-        if (!name || !date || !problem) {
+        if (!date || !name || !problem) {
             return res.status(400).json({ success: false, message: "กรุณากรอกข้อมูลให้ครบถ้วน" });
         }
-
+        
         const newAppointment = {
-            id: appointments.length > 0 ? Math.max(...appointments.map(a => a.id)) + 1 : 1,
-            date: date,
-            name: name,
-            problem: problem,
-            approach: req.body.approach || "-",
-            result: req.body.result || "-",
-            status: req.body.status || "pending"
+            id: Date.now().toString(),
+            date,
+            name,
+            problem,
+            approach: "-",
+            result: "-",
+            status: "pending",
+            referralType: "-",   // ค่าเริ่มต้น: ไม่มีการส่งต่อ
+            referralTarget: "-"  // ค่าเริ่มต้น: ไม่มีหน่วยงาน
         };
         
         appointments.push(newAppointment);
@@ -58,16 +58,19 @@ app.post('/api/appointments', (req, res) => {
     }
 });
 
-// 3. แก้ไขอัปเดตข้อมูล (PUT)
+// 3. ปรับปรุงส่วนอัปเดตข้อมูล (PUT) ใน server.js ให้ดึงค่าส่งต่อไปเซฟได้ครอบคลุมขึ้น
 app.put('/api/appointments/:id', (req, res) => {
-    const id = parseInt(req.params.id);
-    const index = appointments.findIndex(a => a.id === id);
+    const id = req.params.id;
+    const index = appointments.findIndex(a => String(a.id) === String(id));
     
     if (index !== -1) {
-        // อัปเดตเฉพาะค่าที่มีการส่งมาใหม่ รักษาค่าเดิมไว้หากไม่มีการส่งมา
         appointments[index] = { 
             ...appointments[index], 
-            ...req.body 
+            approach: req.body.approach,
+            result: req.body.result,
+            status: req.body.status,
+            referralType: req.body.referralType || "-",    // เซฟประเภทการส่งต่อ
+            referralTarget: req.body.referralTarget || "-"   // เซฟหน่วยงานย่อยที่เลือก
         };
         res.json(appointments[index]);
     } else {
