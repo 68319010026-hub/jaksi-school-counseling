@@ -39,7 +39,7 @@ function checkPassword() {
     });
 }
 
-// 2. ฟังก์ชันดึงข้อมูลจากหลังบ้านมาแสดงในตาราง (เวอร์ชันอัปเดตรองรับป้าย "ติดตามผล")
+// 2. ฟังก์ชันดึงข้อมูลจากหลังบ้านมาแสดงในตาราง (เวอร์ชันอัปเดตรองรับคอลัมน์ส่งต่อ)
 function fetchAppointments() {
     fetch(`${API_URL}/api/appointments`)
         .then(response => response.json())
@@ -50,10 +50,9 @@ function fetchAppointments() {
                 data.forEach(item => {
                     const row = document.createElement('tr');
                     
-                    // ส่วนแก้ไข: แยกสีและตัวหนังสือสำหรับ 3 สถานะอย่างชัดเจน
                     let statusClass = 'status pending';
                     let statusText = 'รอรับคำปรึกษา';
-                    let customStyle = ''; // เอาไว้ใส่สีฟ้าพิเศษให้ป้ายติดตามผล
+                    let customStyle = ''; 
 
                     if (item.status === 'success') {
                         statusClass = 'status success';
@@ -61,9 +60,13 @@ function fetchAppointments() {
                     } else if (item.status === 'follow-up') {
                         statusClass = 'status follow-up';
                         statusText = 'ติดตามผล';
-                        // กำหนดสีฟ้าพาสเทลสำหรับสถานะติดตามผล
                         customStyle = 'style="background-color: #cce5ff; color: #004085; border: 1px solid #b8daff;"';
                     }
+
+                    // แสดงผลข้อมูลการส่งต่อในตาราง (ถ้าไม่มีให้ขึ้นเครื่องหมาย -)
+                    const referralDisplay = item.referralType && item.referralTarget && item.referralType !== '-' 
+                        ? `${item.referralType} (${item.referralTarget})` 
+                        : '-';
 
                     row.innerHTML = `
                         <td>${item.id}</td>
@@ -74,7 +77,7 @@ function fetchAppointments() {
                         <td>${item.result}</td>
                         <td><span class="${statusClass}" ${customStyle}>${statusText}</span></td>
                         <td>
-                            <button class="btn-action" onclick="editAppointment(${item.id}, '${item.approach}', '${item.result}', '${item.status}')">บันทึกผล</button>
+                            <button class="btn-action" onclick="editAppointment(${item.id}, '${item.approach}', '${item.result}', '${item.status}', '${item.referralType || '-'}', '${item.referralTarget || '-'}')">บันทึกผล</button>
                             <button class="btn-delete" onclick="deleteAppointment(${item.id})" style="background-color: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin-left: 5px;">ลบ</button>
                         </td>
                     `;
@@ -85,8 +88,8 @@ function fetchAppointments() {
         .catch(error => console.error('Error fetching data:', error));
 }
 
-// 3. ฟังก์ชันหน้าต่างบันทึกผลและเปลี่ยนสถานะสำหรับคุณครู
-function editAppointment(id, currentApproach, currentResult, currentStatus) {
+// 3. ฟังก์ชันหน้าต่างบันทึกผลและเปลี่ยนสถานะสำหรับคุณครู (เวอร์ชันเพิ่มการส่งต่อ)
+function editAppointment(id, currentApproach, currentResult, currentStatus, currentRefType, currentRefTarget) {
     Swal.fire({
         title: 'บันทึกผลการให้คำปรึกษา',
         html: `
@@ -106,6 +109,21 @@ function editAppointment(id, currentApproach, currentResult, currentStatus) {
                     <option value="follow-up" ${currentStatus === 'follow-up' ? 'selected' : ''}>ติดตามผล</option>
                 </select>
             </div>
+            <hr style="margin: 20px 0; border: 0; border-top: 1px solid #e2e8f0;">
+            <div style="text-align: left; margin-bottom: 10px;">
+                <label style="font-weight: 500; color: #2b6cb0;">การส่งต่อข้อมูลเคส:</label>
+                <select id="swal-ref-type" class="swal2-input" style="margin: 5px 0 15px 0; width: 95%;" onchange="updateReferralOptions()">
+                    <option value="-" ${currentRefType === '-' ? 'selected' : ''}>-- ไม่มีการส่งต่อ --</option>
+                    <option value="ส่งต่อภายใน" ${currentRefType === 'ส่งต่อภายใน' ? 'selected' : ''}>ส่งต่อภายใน</option>
+                    <option value="ส่งต่อภายนอก" ${currentRefType === 'ส่งต่อภายนอก' ? 'selected' : ''}>ส่งต่อภายนอก</option>
+                </select>
+            </div>
+            <div style="text-align: left; margin-bottom: 10px;">
+                <label style="font-weight: 500;">หน่วยงาน / บุคคลที่ส่งต่อ:</label>
+                <select id="swal-ref-target" class="swal2-input" style="margin: 5px 0 15px 0; width: 95%;">
+                    <option value="-">-- เลือกหน่วยงาน --</option>
+                </select>
+            </div>
         `,
         focusConfirm: false,
         showCancelButton: true,
@@ -113,11 +131,17 @@ function editAppointment(id, currentApproach, currentResult, currentStatus) {
         cancelButtonText: 'ยกเลิก',
         confirmButtonColor: '#28a745',
         cancelButtonColor: '#718096',
+        didOpen: () => {
+            // สั่งให้โหลดตัวเลือกหน่วยงานย่อยทันทีตามค่าเดิมที่มีอยู่
+            updateReferralOptions(currentRefTarget);
+        },
         preConfirm: () => {
             return {
                 approach: document.getElementById('swal-approach').value || "-",
                 result: document.getElementById('swal-result').value || "-",
-                status: document.getElementById('swal-status').value
+                status: document.getElementById('swal-status').value,
+                referralType: document.getElementById('swal-ref-type').value,
+                referralTarget: document.getElementById('swal-ref-target').value
             }
         }
     }).then((result) => {
@@ -131,7 +155,7 @@ function editAppointment(id, currentApproach, currentResult, currentStatus) {
             .then(data => {
                 Swal.fire({
                     title: 'บันทึกสำเร็จ!',
-                    text: 'ข้อมูลได้รับการแก้ไขเรียบร้อยแล้ว',
+                    text: 'ข้อมูลและการส่งต่อได้รับการอัปเดตแล้ว',
                     icon: 'success',
                     confirmButtonColor: '#28a745'
                 });
@@ -143,6 +167,37 @@ function editAppointment(id, currentApproach, currentResult, currentStatus) {
             });
         }
     });
+}
+
+// ฟังก์ชันเสริมสำหรับเปลี่ยนตัวเลือกหน่วยงานส่งต่ออัตโนมัติ (ใส่ไว้ท้ายไฟล์ admin.js ได้ครับ)
+function updateReferralOptions(defaultTarget = '-') {
+    const type = document.getElementById('swal-ref-type').value;
+    const targetSelect = document.getElementById('swal-ref-target');
+    if (!targetSelect) return;
+
+    const internalOptions = ["ครูแนะแนว", "ครูที่ปรึกษา", "สภานักเรียน", "ครูอนามัย", "ครูฝ่ายปกครอง", "ผู้บริหารสถานศึกษา"];
+    const externalOptions = [
+        "โรงพยาบาล", "โรงพยาบาลส่งเสริมสุขภาพตำบล", "สถานีตำรวจ", 
+        "สำนักงานพัฒนาสังคมและความมั่นคงของมนุษย์ (พม.)", "บ้านพักเด็กและครอบครัว", 
+        "ศาลเยาวชนและครอบครัว", "องค์การบริหารส่วนตำบล", "ศูนย์เรียนรู้ชุมชน", 
+        "ที่ว่าการอำเภอ", "ผู้ปกครอง", "สถาบันการศึกษา", 
+        "สำนักงานจัดหางานจังหวัด", "สำนักงานส่งเสริมการเรียนรู้ประจำจังหวัด", 
+        "สำนักงานเขตพื้นที่การศึกษา"
+    ];
+
+    let optionsHtml = '<option value="-">-- เลือกหน่วยงาน --</option>';
+
+    if (type === 'ส่งต่อภายใน') {
+        internalOptions.forEach(opt => {
+            optionsHtml += `<option value="${opt}" ${defaultTarget === opt ? 'selected' : ''}>${opt}</option>`;
+        });
+    } else if (type === 'ส่งต่อภายนอก') {
+        externalOptions.forEach(opt => {
+            optionsHtml += `<option value="${opt}" ${defaultTarget === opt ? 'selected' : ''}>${opt}</option>`;
+        });
+    }
+
+    targetSelect.innerHTML = optionsHtml;
 }
 
 // 4. ฟังก์ชันสำหรับลบคำร้องนัดหมายด้วย SweetAlert2
