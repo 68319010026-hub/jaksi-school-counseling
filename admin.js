@@ -90,6 +90,7 @@ function editAppointment(id, currentApproach, currentResult, currentStatus) {
                 <select id="swal-status" class="swal2-input" style="margin: 5px 0 5px 0; width: 95%;">
                     <option value="pending" ${currentStatus === 'pending' ? 'selected' : ''}>รอรับคำปรึกษา</option>
                     <option value="success" ${currentStatus === 'success' ? 'selected' : ''}>เสร็จสิ้น</option>
+                    <option value="success" ${currentStatus === 'follow-up' ? 'selected' : ''}>ติดตามผล</option>
                 </select>
             </div>
         `,
@@ -131,7 +132,7 @@ function editAppointment(id, currentApproach, currentResult, currentStatus) {
     });
 }
 
-// 4. ฟังก์ชันสำหรับลบคำร้องนัดหมายด้วย SweetAlert2 (เวอร์ชันรองรับ JSON)
+// 4. ฟังก์ชันสำหรับลบคำร้องนัดหมายด้วย SweetAlert2
 function deleteAppointment(id) {
     Swal.fire({
         title: 'คุณครูแน่ใจไหม?',
@@ -144,14 +145,15 @@ function deleteAppointment(id) {
         cancelButtonText: 'ยกเลิก'
     }).then((result) => {
         if (result.isConfirmed) {
+            // ส่งคำสั่งลบไปยังหลังบ้านโดยอิงตาม ID
             fetch(`${API_URL}/api/appointments/${id}`, {
                 method: 'DELETE'
             })
             .then(response => {
                 if (!response.ok) {
-                    throw new Error('ไม่สามารถลบข้อมูลได้');
+                    throw new Error('ไม่สามารถลบข้อมูลบนเซิร์ฟเวอร์ได้');
                 }
-                return response.json(); // เปลี่ยนมาแกะ JSON ตามที่หลังบ้านส่งมา
+                return true; // ลบสำเร็จผ่านฉลุย ไม่ต้องแกะ JSON ให้เอ๋อ
             })
             .then(data => {
                 Swal.fire({
