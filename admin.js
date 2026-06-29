@@ -1,7 +1,6 @@
-// 1. ตั้งค่า URL หลังบ้าน (Render)
-const API_URL = 'https://jaksi-school-api.onrender.com';
+// นำลิงก์ URL เว็บแอป (อันล่าง) ที่ได้จาก Google Apps Script มาวางแทนที่ในเครื่องหมายคำพูดด้านล่างนี้ครับ
+const API_URL = 'https://script.google.com/macros/s/AKfycbz1x20HDjXP9IevSy8spyNM3CvpcDhiZbdMgtDLZsKuHs6QUrru7GIr4Uirbx3VAH8V/exec';
 
-// แก้จุดผิดพลาด: ดึงไอดี adminTableBody ให้ตรงกับไฟล์ HTML เรียบร้อยครับ
 const adminTableBody = document.getElementById('adminTableBody');
 
 // ระบบตรวจสอบรหัสผ่าน (Password) ด่านแรกสุดก่อนเข้าใช้งานหน้าแอดมิน
@@ -38,19 +37,25 @@ function checkAdminPassword() {
                 timer: 1500,
                 showConfirmButton: false
             });
-            fetchAppointments(); // โหลดข้อมูลเมื่อผ่านรหัสผ่าน
+            fetchAppointments(); 
         }
     });
 }
 
-// 2. ฟังก์ชันดึงข้อมูลมาแสดงในตารางพร้อมช่องส่งต่อข้อมูล
+// ฟังก์ชันดึงข้อมูลจาก Google Sheets มาแสดงผล
 function fetchAppointments() {
-    fetch(`${API_URL}/api/appointments`)
+    fetch(API_URL)
         .then(response => response.json())
         .then(data => {
             if(adminTableBody) {
                 adminTableBody.innerHTML = ''; 
                 
+                // หากไม่มีข้อมูลในชีทเลย
+                if (data.length === 0) {
+                    adminTableBody.innerHTML = '<tr><td colspan="9" style="text-align:center; color:#a0aec0;">ยังไม่มีข้อมูลการนัดหมายในระบบกูเกิ้ลชีท</td></tr>';
+                    return;
+                }
+
                 data.forEach((item, index) => {
                     const row = document.createElement('tr');
                     
@@ -67,7 +72,6 @@ function fetchAppointments() {
                         customStyle = 'style="background-color: #cce5ff; color: #004085; border: 1px solid #b8daff;"';
                     }
 
-                    // การแสดงผลคอลัมน์การส่งต่อข้อมูลเคสในตารางหลัก
                     const referralDisplay = item.referralType && item.referralTarget && item.referralType !== '-' 
                         ? `<span style="font-weight: 500; color: #2b6cb0;">${item.referralType}</span><br><small style="color: #4a5568;">(${item.referralTarget})</small>` 
                         : '<span style="color: #a0aec0;">-</span>';
@@ -90,10 +94,15 @@ function fetchAppointments() {
                 });
             }
         })
-        .catch(error => console.error('Error fetching data:', error));
+        .catch(error => {
+            console.error('Error fetching data:', error);
+            if(adminTableBody) {
+                adminTableBody.innerHTML = '<tr><td colspan="9" style="text-align:center; color:#dc3545;">เกิดข้อผิดพลาดในการเชื่อมต่อกับกูเกิ้ลชีท</td></tr>';
+            }
+        });
 }
 
-// 3. ฟังก์ชันหน้าต่างบันทึกผล (เพิ่มกล่องส่งต่อภายใน/ภายนอก เรียบร้อยครับ)
+// ฟังก์ชันเปิดหน้าต่างบันทึกผลข้อมูล
 function editAppointment(id, currentApproach, currentResult, currentStatus, currentRefType, currentRefTarget) {
     Swal.fire({
         title: 'บันทึกผลการให้คำปรึกษา',
@@ -141,6 +150,8 @@ function editAppointment(id, currentApproach, currentResult, currentStatus, curr
         },
         preConfirm: () => {
             return {
+                action: "update",
+                id: id,
                 approach: document.getElementById('swal-approach').value || "-",
                 result: document.getElementById('swal-result').value || "-",
                 status: document.getElementById('swal-status').value,
@@ -150,19 +161,21 @@ function editAppointment(id, currentApproach, currentResult, currentStatus, curr
         }
     }).then((result) => {
         if (result.isConfirmed) {
-            fetch(`${API_URL}/api/appointments/${id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
+            Swal.fire({
+                title: 'กำลังบันทึกข้อมูล...',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            fetch(API_URL, {
+                method: 'POST',
+                mode: 'cors',
+                headers: { 'Content-Type': 'text/plain' },
                 body: JSON.stringify(result.value)
             })
             .then(response => response.json())
             .then(data => {
-                Swal.fire({
-                    title: 'บันทึกสำเร็จ!',
-                    text: 'ข้อมูลและการส่งต่อได้รับการอัปเดตแล้ว',
-                    icon: 'success',
-                    confirmButtonColor: '#28a745'
-                });
+                Swal.fire('บันทึกสำเร็จ!', 'ข้อมูลบนกูเกิ้ลชีทได้รับการอัปเดตแล้ว', 'success');
                 fetchAppointments(); 
             })
             .catch(error => {
@@ -173,7 +186,6 @@ function editAppointment(id, currentApproach, currentResult, currentStatus, curr
     });
 }
 
-// 4. ฟังก์ชันสลับหน่วยงานส่งต่อย่อย (ภายใน 6 หน่วยงาน / ภายนอก 14 หน่วยงาน)
 function updateReferralOptions(defaultTarget = '-') {
     const type = document.getElementById('swal-ref-type').value;
     const targetSelect = document.getElementById('swal-ref-target');
@@ -204,11 +216,11 @@ function updateReferralOptions(defaultTarget = '-') {
     targetSelect.innerHTML = optionsHtml;
 }
 
-// 5. ฟังก์ชันลบข้อมูลรายบุคคล
+// ฟังก์ชันลบข้อมูลทีละแถวออกความสัมพันธ์กูเกิ้ลชีท
 function deleteAppointment(id) {
     Swal.fire({
         title: 'คุณครูแน่ใจไหม?',
-        text: "ต้องการลบข้อมูลนัดหมายนี้ใช่หรือไม่!",
+        text: "ต้องการลบข้อมูลนัดหมายนี้ออกจากกูเกิ้ลชีทใช่หรือไม่!",
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#d33',
@@ -217,9 +229,20 @@ function deleteAppointment(id) {
         cancelButtonText: 'ยกเลิก'
     }).then((result) => {
         if (result.isConfirmed) {
-            fetch(`${API_URL}/api/appointments/${id}`, { method: 'DELETE' })
+            Swal.fire({
+                title: 'กำลังลบข้อมูล...',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            fetch(API_URL, { 
+                method: 'POST',
+                mode: 'cors',
+                headers: { 'Content-Type': 'text/plain' },
+                body: JSON.stringify({ action: "delete", id: id })
+            })
             .then(() => {
-                Swal.fire('ลบสำเร็จ!', 'ข้อมูลถูกลบออกจากระบบแล้ว', 'success');
+                Swal.fire('ลบสำเร็จ!', 'ข้อมูลถูกลบออกจากกูเกิ้ลชีทแล้ว', 'success');
                 fetchAppointments();
             })
             .catch(err => console.error(err));
@@ -227,11 +250,11 @@ function deleteAppointment(id) {
     });
 }
 
-// 6. ฟังก์ชันล้างข้อมูลทั้งหมดในตาราง (Clear All)
+// ฟังก์ชันล้างข้อมูลทั้งหมดในตาราง (Clear All)
 function clearAllAppointments() {
     Swal.fire({
         title: 'คุณครูแน่ใจไหมที่จะล้างข้อมูล?',
-        text: "คำร้องนัดหมายทั้งหมดในระบบจะถูกลบถาวรและไม่สามารถกู้คืนได้!",
+        text: "ข้อมูลทั้งหมดในกูเกิ้ลชีทจะถูกลบถาวร (ยกเว้นแถวหัวข้อ) และไม่สามารถกู้คืนได้!",
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#d33',
@@ -240,15 +263,20 @@ function clearAllAppointments() {
         cancelButtonText: 'ยกเลิก'
     }).then((result) => {
         if (result.isConfirmed) {
-            fetch(`${API_URL}/api/appointments`, {
-                method: 'DELETE'
-            })
-            .then(response => {
-                if (!response.ok) throw new Error('Failed');
-                return response.json();
+            Swal.fire({
+                title: 'กำลังล้างข้อมูล...',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            fetch(API_URL, {
+                method: 'POST',
+                mode: 'cors',
+                headers: { 'Content-Type': 'text/plain' },
+                body: JSON.stringify({ action: "clearAll" })
             })
             .then(() => {
-                Swal.fire('ล้างข้อมูลสำเร็จ!', 'ระบบได้รีเซ็ตตารางทั้งหมดเรียบร้อยแล้ว', 'success');
+                Swal.fire('ล้างข้อมูลสำเร็จ!', 'ระบบรีเซ็ตกูเกิ้ลชีททั้งหมดเรียบร้อยแล้ว', 'success');
                 fetchAppointments();
             })
             .catch(error => {
