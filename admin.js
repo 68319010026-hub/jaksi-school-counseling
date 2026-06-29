@@ -1,9 +1,10 @@
 // 1. ตั้งค่า URL หลังบ้าน (Render)
 const API_URL = 'https://jaksi-school-api.onrender.com';
 
-const adminTableBody = document.getElementById('admin-table-body');
+// แก้จุดผิดพลาด: ดึงไอดี adminTableBody ให้ตรงกับไฟล์ HTML เรียบร้อยครับ
+const adminTableBody = document.getElementById('adminTableBody');
 
-// ระบบตรวจสอบรหัสผ่าน (Password) ก่อนเข้าใช้งานหน้าแอดมิน
+// ระบบตรวจสอบรหัสผ่าน (Password) ด่านแรกสุดก่อนเข้าใช้งานหน้าแอดมิน
 document.addEventListener('DOMContentLoaded', () => {
     checkAdminPassword();
 });
@@ -22,7 +23,6 @@ function checkAdminPassword() {
         confirmButtonText: 'เข้าสู่ระบบ',
         confirmButtonColor: '#28a745',
         preConfirm: (password) => {
-            // คุณครูสามารถเปลี่ยนรหัสตรงเลข '1234' นี้ได้ตามต้องการครับ
             if (password === '1234') {
                 return true;
             } else {
@@ -38,12 +38,12 @@ function checkAdminPassword() {
                 timer: 1500,
                 showConfirmButton: false
             });
-            fetchAppointments(); // โหลดข้อมูลตารางเมื่อรหัสผ่านถูกต้อง
+            fetchAppointments(); // โหลดข้อมูลเมื่อผ่านรหัสผ่าน
         }
     });
 }
 
-// 2. ฟังก์ชันดึงข้อมูลมาแสดงในตารางพร้อมช่องส่งต่อ
+// 2. ฟังก์ชันดึงข้อมูลมาแสดงในตารางพร้อมช่องส่งต่อข้อมูล
 function fetchAppointments() {
     fetch(`${API_URL}/api/appointments`)
         .then(response => response.json())
@@ -51,7 +51,7 @@ function fetchAppointments() {
             if(adminTableBody) {
                 adminTableBody.innerHTML = ''; 
                 
-                data.forEach(item => {
+                data.forEach((item, index) => {
                     const row = document.createElement('tr');
                     
                     let statusClass = 'status pending';
@@ -67,23 +67,23 @@ function fetchAppointments() {
                         customStyle = 'style="background-color: #cce5ff; color: #004085; border: 1px solid #b8daff;"';
                     }
 
-                    // จัดการการแสดงผลข้อมูลส่งต่อบนหน้าตารางหลัก
+                    // การแสดงผลคอลัมน์การส่งต่อข้อมูลเคสในตารางหลัก
                     const referralDisplay = item.referralType && item.referralTarget && item.referralType !== '-' 
                         ? `<span style="font-weight: 500; color: #2b6cb0;">${item.referralType}</span><br><small style="color: #4a5568;">(${item.referralTarget})</small>` 
                         : '<span style="color: #a0aec0;">-</span>';
 
                     row.innerHTML = `
-                        <td>${item.id}</td>
+                        <td>${index + 1}</td>
                         <td>${item.date}</td>
                         <td>${item.name}</td>
                         <td>${item.problem}</td>
-                        <td>${item.approach}</td>
-                        <td>${item.result}</td>
+                        <td>${item.approach || '-'}</td>
+                        <td>${item.result || '-'}</td>
                         <td><span class="${statusClass}" ${customStyle}>${statusText}</span></td>
                         <td>${referralDisplay}</td>
                         <td>
-                            <button class="btn-action" onclick="editAppointment(${item.id}, '${item.approach}', '${item.result}', '${item.status}', '${item.referralType || '-'}', '${item.referralTarget || '-'}')">บันทึกผล</button>
-                            <button class="btn-delete" onclick="deleteAppointment(${item.id})" style="background-color: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin-left: 5px;">ลบ</button>
+                            <button class="btn-action" onclick="editAppointment('${item.id}', '${item.approach || '-'}', '${item.result || '-'}', '${item.status || 'pending'}', '${item.referralType || '-'}', '${item.referralTarget || '-'}')">บันทึกผล</button>
+                            <button class="btn-delete" onclick="deleteAppointment('${item.id}')" style="background-color: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin-left: 5px;">ลบ</button>
                         </td>
                     `;
                     adminTableBody.appendChild(row);
@@ -93,7 +93,7 @@ function fetchAppointments() {
         .catch(error => console.error('Error fetching data:', error));
 }
 
-// 3. ฟังก์ชันหน้าต่างบันทึกผล (มีช่องส่งต่อภายใน/ภายนอก)
+// 3. ฟังก์ชันหน้าต่างบันทึกผล (เพิ่มกล่องส่งต่อภายใน/ภายนอก เรียบร้อยครับ)
 function editAppointment(id, currentApproach, currentResult, currentStatus, currentRefType, currentRefTarget) {
     Swal.fire({
         title: 'บันทึกผลการให้คำปรึกษา',
@@ -173,7 +173,7 @@ function editAppointment(id, currentApproach, currentResult, currentStatus, curr
     });
 }
 
-// 4. ฟังก์ชันสลับหน่วยงานส่งต่ออัตโนมัติ
+// 4. ฟังก์ชันสลับหน่วยงานส่งต่อย่อย (ภายใน 6 หน่วยงาน / ภายนอก 14 หน่วยงาน)
 function updateReferralOptions(defaultTarget = '-') {
     const type = document.getElementById('swal-ref-type').value;
     const targetSelect = document.getElementById('swal-ref-target');
@@ -253,4 +253,8 @@ function clearAllAppointments() {
             })
             .catch(error => {
                 console.error(error);
-                Swal.fire('เกิดข้อผิดพลาด', 'ไม่สามารถล้าง
+                Swal.fire('เกิดข้อผิดพลาด', 'ไม่สามารถล้างข้อมูลได้', 'error');
+            });
+        }
+    });
+}
