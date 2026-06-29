@@ -1,14 +1,14 @@
-// ตั้งค่า URL หลังบ้านของคุณครู (Render)
+// 1. ตั้งค่า URL หลังบ้าน (Render)
 const API_URL = 'https://jaksi-school-api.onrender.com';
 
 const adminTableBody = document.getElementById('admin-table-body');
 
-// 1. โหลดข้อมูลเมื่อเปิดหน้าเว็บ
+// โหลดข้อมูลเมื่อเปิดหน้าเว็บ
 document.addEventListener('DOMContentLoaded', () => {
     fetchAppointments();
 });
 
-// 2. ฟังก์ชันดึงข้อมูลมาแสดงในตารางพร้อมช่องส่งต่อข้อมูล
+// 2. ฟังก์ชันดึงข้อมูลมาแสดงในตาราง
 function fetchAppointments() {
     fetch(`${API_URL}/api/appointments`)
         .then(response => response.json())
@@ -32,7 +32,7 @@ function fetchAppointments() {
                         customStyle = 'style="background-color: #cce5ff; color: #004085; border: 1px solid #b8daff;"';
                     }
 
-                    // จัดการแสดงผลช่องส่งต่อในตารางหลัก
+                    // แสดงผลช่องส่งต่อในตารางหลัก
                     const referralDisplay = item.referralType && item.referralTarget && item.referralType !== '-' 
                         ? `<span style="font-weight: 500; color: #2b6cb0;">${item.referralType}</span><br><small style="color: #4a5568;">(${item.referralTarget})</small>` 
                         : '<span style="color: #a0aec0;">-</span>';
@@ -58,7 +58,7 @@ function fetchAppointments() {
         .catch(error => console.error('Error fetching data:', error));
 }
 
-// 3. ฟังก์ชันเปิดหน้าต่างบันทึกผล (เพิ่มช่องเลือกส่งต่อภายใน/ภายนอก กลับมาให้แล้วครับ)
+// 3. ฟังก์ชันหน้าต่างบันทึกผล (แก้ไขจุดที่ทำระบบค้างให้แล้วครับ)
 function editAppointment(id, currentApproach, currentResult, currentStatus, currentRefType, currentRefTarget) {
     Swal.fire({
         title: 'บันทึกผลการให้คำปรึกษา',
@@ -138,7 +138,7 @@ function editAppointment(id, currentApproach, currentResult, currentStatus, curr
     });
 }
 
-// 4. ฟังก์ชันสลับรายชื่อหน่วยงานย่อย (ภายใน / ภายนอก)
+// 4. ฟังก์ชันสลับหน่วยงานส่งต่อ
 function updateReferralOptions(defaultTarget = '-') {
     const type = document.getElementById('swal-ref-type').value;
     const targetSelect = document.getElementById('swal-ref-target');
@@ -169,7 +169,7 @@ function updateReferralOptions(defaultTarget = '-') {
     targetSelect.innerHTML = optionsHtml;
 }
 
-// 5. ฟังก์ชันลบข้อมูลทีละแถว
+// 5. ฟังก์ชันลบข้อมูล
 function deleteAppointment(id) {
     Swal.fire({
         title: 'คุณครูแน่ใจไหม?',
