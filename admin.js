@@ -1,14 +1,49 @@
-// ตั้งค่า URL หลังบ้านของคุณครู (Render)
+// 1. ตั้งค่า URL หลังบ้าน (Render)
 const API_URL = 'https://jaksi-school-api.onrender.com';
 
 const adminTableBody = document.getElementById('admin-table-body');
 
-// 1. โหลดข้อมูลเมื่อเปิดหน้าเว็บ
+// ระบบตรวจสอบรหัสผ่าน (Password) ก่อนเข้าใช้งานหน้าแอดมิน
 document.addEventListener('DOMContentLoaded', () => {
-    fetchAppointments();
+    checkAdminPassword();
 });
 
-// 2. ฟังก์ชันดึงข้อมูลมาแสดงในตารางพร้อมช่องส่งต่อข้อมูล
+function checkAdminPassword() {
+    Swal.fire({
+        title: 'กรุณากรอกรหัสผ่านแอดมิน',
+        input: 'password',
+        inputAttributes: {
+            autocapitalize: 'off',
+            autocorrect: 'off'
+        },
+        placeholder: 'ระบุรหัสผ่านของคุณครู',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        confirmButtonText: 'เข้าสู่ระบบ',
+        confirmButtonColor: '#28a745',
+        preConfirm: (password) => {
+            // คุณครูสามารถเปลี่ยนรหัสตรงเลข '1234' นี้ได้ตามต้องการครับ
+            if (password === '1234') {
+                return true;
+            } else {
+                Swal.showValidationMessage('รหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง');
+                return false;
+            }
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            Swal.fire({
+                icon: 'success',
+                title: 'ยินดีต้อนรับเข้าสู่ระบบ',
+                timer: 1500,
+                showConfirmButton: false
+            });
+            fetchAppointments(); // โหลดข้อมูลตารางเมื่อรหัสผ่านถูกต้อง
+        }
+    });
+}
+
+// 2. ฟังก์ชันดึงข้อมูลมาแสดงในตารางพร้อมช่องส่งต่อ
 function fetchAppointments() {
     fetch(`${API_URL}/api/appointments`)
         .then(response => response.json())
@@ -32,7 +67,7 @@ function fetchAppointments() {
                         customStyle = 'style="background-color: #cce5ff; color: #004085; border: 1px solid #b8daff;"';
                     }
 
-                    // จัดการแสดงผลช่องส่งต่อในตารางหลัก
+                    // จัดการการแสดงผลข้อมูลส่งต่อบนหน้าตารางหลัก
                     const referralDisplay = item.referralType && item.referralTarget && item.referralType !== '-' 
                         ? `<span style="font-weight: 500; color: #2b6cb0;">${item.referralType}</span><br><small style="color: #4a5568;">(${item.referralTarget})</small>` 
                         : '<span style="color: #a0aec0;">-</span>';
@@ -58,7 +93,7 @@ function fetchAppointments() {
         .catch(error => console.error('Error fetching data:', error));
 }
 
-// 3. ฟังก์ชันเปิดหน้าต่างบันทึกผล (เพิ่มช่องเลือกส่งต่อภายใน/ภายนอก กลับมาให้แล้วครับ)
+// 3. ฟังก์ชันหน้าต่างบันทึกผล (มีช่องส่งต่อภายใน/ภายนอก)
 function editAppointment(id, currentApproach, currentResult, currentStatus, currentRefType, currentRefTarget) {
     Swal.fire({
         title: 'บันทึกผลการให้คำปรึกษา',
@@ -138,7 +173,7 @@ function editAppointment(id, currentApproach, currentResult, currentStatus, curr
     });
 }
 
-// 4. ฟังก์ชันสลับรายชื่อหน่วยงานย่อย (ภายใน / ภายนอก)
+// 4. ฟังก์ชันสลับหน่วยงานส่งต่ออัตโนมัติ
 function updateReferralOptions(defaultTarget = '-') {
     const type = document.getElementById('swal-ref-type').value;
     const targetSelect = document.getElementById('swal-ref-target');
@@ -169,7 +204,7 @@ function updateReferralOptions(defaultTarget = '-') {
     targetSelect.innerHTML = optionsHtml;
 }
 
-// 5. ฟังก์ชันลบข้อมูลทีละแถว
+// 5. ฟังก์ชันลบข้อมูลรายบุคคล
 function deleteAppointment(id) {
     Swal.fire({
         title: 'คุณครูแน่ใจไหม?',
@@ -191,3 +226,31 @@ function deleteAppointment(id) {
         }
     });
 }
+
+// 6. ฟังก์ชันล้างข้อมูลทั้งหมดในตาราง (Clear All)
+function clearAllAppointments() {
+    Swal.fire({
+        title: 'คุณครูแน่ใจไหมที่จะล้างข้อมูล?',
+        text: "คำร้องนัดหมายทั้งหมดในระบบจะถูกลบถาวรและไม่สามารถกู้คืนได้!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#718096',
+        confirmButtonText: 'ใช่, ลบทั้งหมด!',
+        cancelButtonText: 'ยกเลิก'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch(`${API_URL}/api/appointments`, {
+                method: 'DELETE'
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Failed');
+                return response.json();
+            })
+            .then(() => {
+                Swal.fire('ล้างข้อมูลสำเร็จ!', 'ระบบได้รีเซ็ตตารางทั้งหมดเรียบร้อยแล้ว', 'success');
+                fetchAppointments();
+            })
+            .catch(error => {
+                console.error(error);
+                Swal.fire('เกิดข้อผิดพลาด', 'ไม่สามารถล้าง
