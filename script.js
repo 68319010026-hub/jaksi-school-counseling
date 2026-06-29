@@ -1,58 +1,65 @@
-// ดึงเอลิเมนต์ต่างๆ จาก HTML มารอใช้งาน
+// นำลิงก์ URL เว็บแอป (อันล่าง) ที่ได้จาก Google Apps Script มาวางแทนที่ในเครื่องหมายคำพูดด้านล่างนี้ครับ
+const API_URL = 'https://script.google.com/macros/s/AKfycbz1x20HDjXP9IevSy8spyNM3CvpcDhiZbdMgtDLZsKuHs6QUrru7GIr4Uirbx3VAH8V/exec';
+
 const bookingForm = document.getElementById('bookingForm');
 
-// ตั้งค่าตัวแปร URL สำหรับเชื่อมต่อเซิร์ฟเวอร์ออนไลน์ของ Render
-const API_URL = 'https://jaksi-school-api.onrender.com';
+if (bookingForm) {
+    bookingForm.addEventListener('submit', function(event) {
+        event.preventDefault(); 
 
-// ดักจับเหตุการณ์เมื่อผู้ใช้กด "ส่งคำร้อง" (Submit Form)
-bookingForm.addEventListener('submit', function(event) {
-    event.preventDefault(); // ป้องกันไม่ให้หน้าเว็บรีเฟรชตัวเองตอนกดส่ง
+        const name = document.getElementById('studentName').value;
+        const date = document.getElementById('appointmentDate').value;
+        const problem = document.getElementById('problemDetail').value;
 
-    // 1. ดึงค่าจากช่องกรอกข้อมูลต่างๆ ที่นักเรียนพิมพ์
-    const name = document.getElementById('studentName').value;
-    const date = document.getElementById('appointmentDate').value;
-    const problem = document.getElementById('problemDetail').value;
+        // รวบรวมข้อมูล พร้อมระบุ action เป็น "create" เพื่อบอกให้เซิร์ฟเวอร์รู้ว่าเป็นการบันทึกข้อมูลใหม่
+        const bookingData = {
+            action: "create",
+            date: date,
+            name: name,
+            problem: problem
+        };
 
-    // 2. รวบรวมข้อมูลให้อยู่ในรูปแบบ Object พร้อมส่ง
-    // กำหนดค่าเริ่มต้นให้กับแนวทาง, ผลลัพธ์ และสถานะ (รอรับคำปรึกษา)
-    const bookingData = {
-        date: date,
-        name: name,
-        problem: problem,
-        approach: "-",
-        result: "-",
-        status: "pending"
-    };
-
-    // 3. ยิงข้อมูลขึ้นไปบันทึกบนเซิร์ฟเวอร์ออนไลน์ (Render)
-    fetch(`${API_URL}/api/appointments`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(bookingData)
-    })
-    .then(response => response.json())
-    .then(data => {
-        // แสดงหน้าต่างแจ้งเตือนแสนสวยเมื่อส่งข้อมูลสำเร็จ
+        // แสดงผลว่ากำลังบันทึกข้อมูล
         Swal.fire({
-            title: 'สำเร็จ!',
-            text: 'ส่งคำร้องขอเข้ารับคำปรึกษาเรียบร้อยแล้วครับ',
-            icon: 'success',
-            confirmButtonColor: '#28a745'
+            title: 'กำลังส่งข้อมูล...',
+            text: 'กรุณารอสักครู่ระบบกำลังบันทึกลง Google Sheets',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
         });
-        
-        // เคลียร์ข้อมูลในฟอร์มให้ว่าง พร้อมสำหรับการกรอกครั้งต่อไป
-        bookingForm.reset();
-    })
-    .catch(error => {
-        console.error('Error sending data:', error);
-        // แสดงหน้าต่างสีแดงเมื่อระบบเชื่อมต่อหลังบ้านมีปัญหา
-        Swal.fire({
-            title: 'Jaksi School',
-            text: 'เกิดข้อผิดพลาดในการส่งข้อมูล กรุณาลองใหม่อีกครั้ง',
-            icon: 'error',
-            confirmButtonColor: '#dc3545'
+
+        // ส่งข้อมูลไปยัง Google Apps Script
+        fetch(API_URL, {
+            method: 'POST',
+            mode: 'cors',
+            headers: {
+                'Content-Type': 'text/plain' // ใช้ text/plain เพื่อป้องกันปัญหา CORS กับ Google Script
+            },
+            body: JSON.stringify(bookingData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.result === "success") {
+                Swal.fire({
+                    title: 'สำเร็จ!',
+                    text: 'ส่งคำร้องขอเข้ารับคำปรึกษาเรียบร้อยแล้วครับ',
+                    icon: 'success',
+                    confirmButtonColor: '#28a745'
+                });
+                bookingForm.reset();
+            } else {
+                throw new Error("บันทึกไม่สำเร็จ");
+            }
+        })
+        .catch(error => {
+            console.error('Error sending data:', error);
+            Swal.fire({
+                title: 'เกิดข้อผิดพลาด',
+                text: 'ไม่สามารถส่งข้อมูลได้ กรุณาลองใหม่อีกครั้ง',
+                icon: 'error',
+                confirmButtonColor: '#dc3545'
+            });
         });
     });
-});
+}
